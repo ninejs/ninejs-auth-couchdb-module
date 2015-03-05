@@ -1,0 +1,17 @@
+{
+	"units": {
+      "ninejs/auth/impl": {
+        "options": {
+          "usersDb": "users"
+        },
+        "storeConfig": {
+          "host": "localhost",
+          "port": 5984,
+          "cache": false,
+          "raw": false,
+          "maxSockets": 10
+        }
+      }
+
+	}
+}
