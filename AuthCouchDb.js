@@ -2,6 +2,7 @@
 var deferredUtils = require('ninejs/core/deferredUtils'),
 	crypto = require('crypto'),
 	AuthCouchDb,
+	cradle = require('cradle'),
 	usersDb = 'users';
 AuthCouchDb = function(config, module) {
 	var db,
@@ -18,26 +19,28 @@ AuthCouchDb = function(config, module) {
 	db = storeConnection.database(usersDb);
 	this.login = function(username, password, domain) {
 		/* jshint unused: true */
-		var def = deferredUtils.defer(),
-			self = this,
-			bucket = db.bucket(usersDb);
+		var def = deferredUtils.defer();
 		if (domain) {
 			username += '@' + domain;
 		}
-		bucket.objectsFromIndex('username', username).then (function (resp) {
-			if ((resp.data.length === 0) || (resp.data.length > 1)) {
-				def.resolve({ result: 'failed' });
-			}
-			var data = resp.data[0];
-			if (password && data.active && data.username === username && data.password === hash(password)) {
-				data.result = 'success';
-				def.resolve(data);
+		db.view('user/active', { key: username, reduce: true }, function (err, resp) {
+			if (err) {
+				def.reject(err);
 			}
 			else {
-				def.resolve({ result: 'failed' });
+				if ((resp.length === 0) || (resp.length > 1)) {
+					def.resolve({result: 'failed'});
+				}
+				var data = resp[0].value;
+				if (password && data.active && data.username === username && data.password === hash(password)) {
+					data.result = 'success';
+					delete data.password;
+					def.resolve(data);
+				}
+				else {
+					def.resolve({result: 'failed'});
+				}
 			}
-		}, function (err) {
-			def.reject(err);
 		});
 		return def.promise;
 	};
@@ -47,17 +50,19 @@ AuthCouchDb = function(config, module) {
 
 		var getUserDefer = deferredUtils.defer();
 		createUser = getUserDefer.promise;
-		bucket.keysFromIndex('username', 'admin')
-			.then (function (resp) {
-				getUserDefer.resolve(resp.data.length === 0);// resp.data === null);
-			}, function (/* err */) {
+		db.view('user/active', { key: 'admin', reduce: true }, function (err, user) {
+			if (err) {
 				getUserDefer.resolve(false);
-			});
+			}
+			else {
+				getUserDefer.resolve(user.length === 0);
+			}
+		});
 
 		deferredUtils.when(createUser, function(createUser) {
 			if (createUser) {
 				logger.info('ninejs/auth/impl (CouchDB): Creating user "admin" with password "password".');
-				bucket.save('admin', {
+				db.save('admin', {
 					type: 'user',
 					username: 'admin',
 					password: hash('password'),
@@ -79,12 +84,12 @@ AuthCouchDb = function(config, module) {
 	}
 	function getUser(username) {
 		var def = deferredUtils.defer();
-		db.get(username, function(err, data) {
+		db.view('user/active', { key: username, reduce: true }, function(err, data) {
 			if (err) {
 				logger.info('ninejs/auth/impl (CouchDB): ' + err);
 			}
 			else {
-				def.resolve(data);
+				def.resolve(data[0].value);
 			}
 		});
 		return def.promise;
