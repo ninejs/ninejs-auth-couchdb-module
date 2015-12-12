@@ -1,13 +1,22 @@
 {
-  "name": "ninejs-auth-riak-module",
-  "description": "NineJs Authentication/Authorization module - Riak 2.0 HTTP implementation",
-  "version": "0.0.1",
+  "name": "ninejs-auth-couchdb-module",
+  "description": "NineJs Authentication/Authorization module - CouchDB",
+  "version": "0.0.2",
   "author": "Eduardo Burgos <eburgos@gmail.com>",
-  "repository": "git://github.com/ninejs/ninejs-auth-riak-module",
+  "repository": "git://github.com/ninejs/ninejs-auth-couchdb-module",
   "dependencies": {
-    "reeak": "*"
+    "cradle": "^0.6.9"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "grunt": "^0.4.5",
+    "grunt-ts": "^5.3.0-beta.2",
+    "kew": "^0.7.0",
+    "load-grunt-tasks": "^3.3.0",
+    "ninejs": "ninejs/ninejs#master",
+    "tsd": "^0.6.3",
+    "typescript": "git+https://github.com/Microsoft/typescript.git#dac1874c38c29352142757d14b06221af7590293"
+  },
+  "main": "./module.js",
   "component": {
     "scripts": {}
   },

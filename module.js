@@ -1,41 +1,34 @@
-'use strict';
-var extend = require('ninejs/core/extend');
-var Module = require('ninejs/modules/Module');
-var Auth = require('./AuthCouchDb');
-var result;
-var AuthModule = extend(Module, {
-	consumes: [
-		{
-			id: 'ninejs',
-			version: '*',
-			features: {}
-		}
-	],
-	provides: [
-		{
-			id: 'ninejs/auth/impl',
-			version: require('./package.json').version
-		}
-	],
-	getProvides: function(name) {
-		if (name === 'ninejs/auth/impl') {
-			return this.auth;
-		}
-		return null;
-	},
-	init: extend.after(function(name, config) {
-		var log;
-		if (name === 'ninejs/auth/impl') {
-			log = this.getUnit('ninejs').get('logger');
-			log.info('ninejs/auth/impl (CouchDB) module starting');
-			this.auth = new Auth(config, this);
-		}
-	})
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, Promise, generator) {
+    return new Promise(function (resolve, reject) {
+        generator = generator.call(thisArg, _arguments);
+        function cast(value) { return value instanceof Promise && value.constructor === Promise ? value : new Promise(function (resolve) { resolve(value); }); }
+        function onfulfill(value) { try { step("next", value); } catch (e) { reject(e); } }
+        function onreject(value) { try { step("throw", value); } catch (e) { reject(e); } }
+        function step(verb, value) {
+            var result = generator[verb](value);
+            result.done ? resolve(result.value) : cast(result.value).then(onfulfill, onreject);
+        }
+        step("next", void 0);
+    });
+};
+(function (factory) {
+    if (typeof module === 'object' && typeof module.exports === 'object') {
+        var v = factory(require, exports); if (v !== undefined) module.exports = v;
+    }
+    else if (typeof define === 'function' && define.amd) {
+        define(["require", "exports", './AuthCouchDb', 'ninejs/modules/moduleDefine'], factory);
+    }
+})(function (require, exports) {
+    'use strict';
+    var AuthCouchDb_1 = require('./AuthCouchDb');
+    var moduleDefine_1 = require('ninejs/modules/moduleDefine');
+    exports.default = moduleDefine_1.define(['ninejs'], function (provide) {
+        provide('ninejs/auth/impl', (config, ninejs) => {
+            var log = ninejs.get('logger');
+            log.info('ninejs/auth/impl (CouchDB) module starting');
+            var auth = new AuthCouchDb_1.default(config, ninejs);
+            return auth;
+        });
+    });
 });
-result = new AuthModule();
-result.on('modulesEnabled', function() {
-	process.nextTick(function() {
-		result.auth.init();
-	});
-});
-module.exports = result;
+//# sourceMappingURL=module.js.map
