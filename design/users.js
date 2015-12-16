@@ -3,13 +3,14 @@
         var v = factory(require, exports); if (v !== undefined) module.exports = v;
     }
     else if (typeof define === 'function' && define.amd) {
-        define(["require", "exports", 'ninejs/core/deferredUtils', '../cradle', '../couchUtils'], factory);
+        define(["require", "exports", 'ninejs/core/deferredUtils', '../cradle', '../couchUtils', '../hashMethod'], factory);
     }
 })(function (require, exports) {
     'use strict';
     var deferredUtils_1 = require('ninejs/core/deferredUtils');
     var cradle_1 = require('../cradle');
     var couchUtils_1 = require('../couchUtils');
+    var hashMethod_1 = require('../hashMethod');
     let emit;
     function getUserDesignDocument(config) {
         var documentName = config.documentName || 'user';
@@ -175,7 +176,7 @@
         }
     }
     function checkDb(db, log, config, justCreated) {
-        var userDefer = deferredUtils_1.defer(), createdDefer = deferredUtils_1.defer(), config = config || {}, options = config.options || {}, documentName = options.documentName || 'user', defaultUserName = options.defaultUserName || 'admin', defaultPassword = options.defaultPassword || 'password', hash = require('../hashMethod')(options.hashMethod, options.hashEncoding);
+        var userDefer = deferredUtils_1.defer(), createdDefer = deferredUtils_1.defer(), config = config || {}, options = config.options || {}, documentName = options.documentName || 'user', defaultUserName = options.defaultUserName || 'admin', defaultPassword = options.defaultPassword || 'password', hash = hashMethod_1.default(options.hashMethod, options.hashEncoding);
         if (!justCreated) {
             createdDefer.resolve(true);
         }
@@ -228,7 +229,7 @@
                 }
             }
         });
-        return deferredUtils_1.all([userDefer, createdDefer]);
+        return deferredUtils_1.all([userDefer.promise, createdDefer.promise]);
     }
     exports.default = checkDb;
 });

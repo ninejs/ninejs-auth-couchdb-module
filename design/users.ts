@@ -5,6 +5,7 @@ import {Database} from '../cradle';
 import { all, defer, PromiseType } from 'ninejs/core/deferredUtils'
 import { merge } from '../cradle'
 import { mergeWithoutConflict } from '../couchUtils'
+import hashMethod from '../hashMethod'
 
 let	emit: any; //just to pass linter
 
@@ -195,7 +196,7 @@ export default function checkDb(db: Database, log: Logger, config: any, justCrea
 		documentName = options.documentName || 'user',
 		defaultUserName = options.defaultUserName || 'admin',
 		defaultPassword = options.defaultPassword || 'password',
-		hash = require('../hashMethod')(options.hashMethod, options.hashEncoding);
+		hash = hashMethod(options.hashMethod, options.hashEncoding);
 	if (!justCreated) {
 		createdDefer.resolve(true);
 	}
@@ -245,5 +246,5 @@ export default function checkDb(db: Database, log: Logger, config: any, justCrea
 		}
 	});
 
-	return all([userDefer, createdDefer]);
+	return all([userDefer.promise, createdDefer.promise]);
 }

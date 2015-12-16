@@ -19,7 +19,7 @@ function sha256 (v: string) {
 function encode(hash: crypto.Hash, encoding: string) {
 	return hash.digest(encoding);
 }
-export default function (method?: string, encoding?: string): (username: string, password: string) => string {
+export default function hashMethod(method?: string, encoding?: string): (username: string, password: string) => string {
 	if (!method) {
 		method = 'sha1';
 	}

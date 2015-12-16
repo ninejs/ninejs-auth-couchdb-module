@@ -25,7 +25,7 @@
     function encode(hash, encoding) {
         return hash.digest(encoding);
     }
-    function (method, encoding) {
+    function hashMethod(method, encoding) {
         if (!method) {
             method = 'sha1';
         }
@@ -44,6 +44,6 @@
                 return require(method);
         }
     }
-    exports.default = default_1;
+    exports.default = hashMethod;
 });
 //# sourceMappingURL=hashMethod.js.map
