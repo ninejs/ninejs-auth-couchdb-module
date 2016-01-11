@@ -22,11 +22,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, Promi
     'use strict';
     var AuthCouchDb_1 = require('./AuthCouchDb');
     var moduleDefine_1 = require('ninejs/modules/moduleDefine');
-    exports.default = moduleDefine_1.define(['ninejs'], function (provide) {
-        provide('ninejs/auth/impl', (config, ninejs) => {
+    exports.default = moduleDefine_1.define(['ninejs', 'ninejs/store/couchdb'], function (provide) {
+        provide('ninejs/auth/impl', (config, ninejs, couchdb) => {
             var log = ninejs.get('logger');
             log.info('ninejs/auth/impl (CouchDB) module starting');
-            var auth = new AuthCouchDb_1.default(config, ninejs);
+            var auth = new AuthCouchDb_1.default(config, ninejs, couchdb);
             return auth;
         });
     });

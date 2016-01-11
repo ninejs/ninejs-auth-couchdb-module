@@ -3,14 +3,12 @@
         var v = factory(require, exports); if (v !== undefined) module.exports = v;
     }
     else if (typeof define === 'function' && define.amd) {
-        define(["require", "exports", 'ninejs/core/deferredUtils', '../cradle', '../couchUtils', '../hashMethod'], factory);
+        define(["require", "exports", 'ninejs/core/deferredUtils', 'ninejs-store/couchdb/couchUtils'], factory);
     }
 })(function (require, exports) {
     'use strict';
     var deferredUtils_1 = require('ninejs/core/deferredUtils');
-    var cradle_1 = require('../cradle');
-    var couchUtils_1 = require('../couchUtils');
-    var hashMethod_1 = require('../hashMethod');
+    var couchUtils_1 = require('ninejs-store/couchdb/couchUtils');
     let emit;
     function getUserDesignDocument(config) {
         var documentName = config.documentName || 'user';
@@ -175,28 +173,8 @@
             return false;
         }
     }
-    function checkDb(db, log, config, justCreated) {
-        var userDefer = deferredUtils_1.defer(), createdDefer = deferredUtils_1.defer(), config = config || {}, options = config.options || {}, documentName = options.documentName || 'user', defaultUserName = options.defaultUserName || 'admin', defaultPassword = options.defaultPassword || 'password', hash = hashMethod_1.default(options.hashMethod, options.hashEncoding);
-        if (!justCreated) {
-            createdDefer.resolve(true);
-        }
-        else {
-            log.info('Creating auth\'s default user \"' + defaultUserName + '\" with password \"' + defaultPassword + '\"');
-            couchUtils_1.mergeWithoutConflict(db, undefined, {
-                type: 'user',
-                username: defaultUserName,
-                password: hash(defaultUserName, defaultPassword),
-                active: true
-            }, function (err) {
-                if (err) {
-                    log.error(err);
-                    createdDefer.reject(err);
-                }
-                else {
-                    createdDefer.resolve(true);
-                }
-            });
-        }
+    function checkDb(db, log, config) {
+        var userDefer = deferredUtils_1.defer(), config = config || {}, options = config.options || {}, documentName = options.documentName || 'user';
         let user = getUserDesignDocument(config);
         db.get('_design/' + documentName, function (err, data) {
             if (err) {
@@ -214,7 +192,7 @@
             else {
                 if (differ(data, user)) {
                     log.info('Updating _design/' + documentName);
-                    couchUtils_1.mergeWithoutConflict(db, '_design/' + documentName, cradle_1.merge({}, data, user), function (err) {
+                    couchUtils_1.mergeWithoutConflict(db, '_design/' + documentName, couchUtils_1.merge({}, data, user), function (err) {
                         if (err) {
                             userDefer.reject(err);
                             log.info(err);
@@ -229,7 +207,7 @@
                 }
             }
         });
-        return deferredUtils_1.all([userDefer.promise, createdDefer.promise]);
+        return userDefer.promise;
     }
     exports.default = checkDb;
 });

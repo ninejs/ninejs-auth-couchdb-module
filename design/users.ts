@@ -1,10 +1,8 @@
 'use strict';
 import {Logger} from 'ninejs/modules/ninejs-server';
-import {Database} from '../cradle';
-
-import { all, defer, PromiseType } from 'ninejs/core/deferredUtils'
-import { merge } from '../cradle'
-import { mergeWithoutConflict } from '../couchUtils'
+import {Database} from 'ninejs-store/CouchDB';
+import { defer, PromiseType } from 'ninejs/core/deferredUtils'
+import { mergeWithoutConflict, merge } from 'ninejs-store/couchdb/couchUtils'
 import hashMethod from '../hashMethod'
 
 let	emit: any; //just to pass linter
@@ -188,34 +186,11 @@ function differ(existing: any, data: any) {
 	}
 }
 
-export default function checkDb(db: Database, log: Logger, config: any, justCreated?: boolean) {
+export default function checkDb(db: Database, log: Logger, config: any) {
 	var userDefer = defer(),
-		createdDefer = defer(),
 		config = config || {},
 		options = config.options || {},
-		documentName = options.documentName || 'user',
-		defaultUserName = options.defaultUserName || 'admin',
-		defaultPassword = options.defaultPassword || 'password',
-		hash = hashMethod(options.hashMethod, options.hashEncoding);
-	if (!justCreated) {
-		createdDefer.resolve(true);
-	}
-	else {
-		log.info('Creating auth\'s default user \"' + defaultUserName  + '\" with password \"' + defaultPassword + '\"');
-		mergeWithoutConflict(db, undefined, {
-			type: 'user',
-			username: defaultUserName,
-			password: hash(defaultUserName, defaultPassword),
-			active: true
-		}, function(err: Error) {
-			if (err) {
-				log.error(err);
-				createdDefer.reject(err);
-			} else {
-				createdDefer.resolve(true);
-			}
-		});
-	}
+		documentName = options.documentName || 'user';
 	let user = getUserDesignDocument (config);
 
 	db.get('_design/' + documentName, function(err: any, data: any) {
@@ -246,5 +221,5 @@ export default function checkDb(db: Database, log: Logger, config: any, justCrea
 		}
 	});
 
-	return all([userDefer.promise, createdDefer.promise]);
+	return userDefer.promise;
 }

@@ -16,12 +16,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, Promi
         var v = factory(require, exports); if (v !== undefined) module.exports = v;
     }
     else if (typeof define === 'function' && define.amd) {
-        define(["require", "exports", 'ninejs/core/deferredUtils', './cradle', './hashMethod', './design/users'], factory);
+        define(["require", "exports", 'ninejs/core/deferredUtils', './hashMethod', './design/users'], factory);
     }
 })(function (require, exports) {
     'use strict';
     var deferredUtils_1 = require('ninejs/core/deferredUtils');
-    var cradle_1 = require('./cradle');
     var hashMethod_1 = require('./hashMethod');
     var users_1 = require('./design/users');
     let dot = (name) => {
@@ -31,10 +30,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, Promi
     };
     let mapValue = dot('value');
     class AuthCouchDb {
-        constructor(config, ninejs) {
+        constructor(config, ninejs, couchdb) {
+            let couchdbConnectionName = (config.options || {}).couchDbConnection;
+            let couchDbConnection = couchdb.connection(couchdbConnectionName);
             this.usersDb = ((config.options || {}).usersDb) || this.usersDb;
-            this.storeConfig = config.storeConfig;
-            this.storeConnection = new cradle_1.Connection(this.storeConfig.host, this.storeConfig.port, this.storeConfig);
+            this.storeConnection = couchDbConnection;
             this.logger = ninejs.get('logger');
             this.db = this.storeConnection.database(this.usersDb);
             this.config = config;
@@ -112,12 +112,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, Promi
                 this.hash = hash;
                 try {
                     let dbExists = yield deferredUtils_1.ncall(this.db.exists, this.db);
-                    let justCreated = false;
                     if (!dbExists) {
                         yield this.db.create();
-                        justCreated = true;
                     }
-                    yield users_1.default(this.db, this.logger, this.config, justCreated);
+                    yield users_1.default(this.db, this.logger, this.config);
                     var user = yield deferredUtils_1.ncall(this.db.view, this.db, documentName + '/active', { key: defaultUserName, reduce: true });
                     if (user.length === 0) {
                         this.logger.info('ninejs/auth/impl (CouchDB): Creating user "' + defaultUserName + '" with password "' + defaultPassword + '".');

@@ -1,9 +1,8 @@
 'use strict';
 
-import {ViewParameters} from "./cradle";
 import { when, defer, ncall } from 'ninejs/core/deferredUtils'
 import { NineJs, Logger } from 'ninejs/modules/ninejs-server'
-import { CradleConnection, Connection, Database } from './cradle'
+import { default as CouchDB, CouchConnection, Database, ViewParameters } from 'ninejs-store/CouchDB'
 import hashMethod from './hashMethod'
 import designUsers from './design/users'
 
@@ -18,17 +17,17 @@ let mapValue = dot('value');
 
 class AuthCouchDb {
 	usersDb: string;
-	storeConfig: any;
-	storeConnection: CradleConnection;
+	storeConnection: CouchConnection;
 	logger: Logger;
 	db: Database;
 	hash: (username: string, password: string) => string;
 	documentName: string;
 	config: any;
-	constructor (config: any, ninejs: NineJs) {
+	constructor (config: any, ninejs: NineJs, couchdb: CouchDB) {
+		let couchdbConnectionName = (config.options || {}).couchDbConnection;
+		let couchDbConnection = couchdb.connection(couchdbConnectionName);
 		this.usersDb = ((config.options || {}).usersDb) || this.usersDb;
-		this.storeConfig = config.storeConfig;
-		this.storeConnection = new Connection(this.storeConfig.host, this.storeConfig.port, this.storeConfig);
+		this.storeConnection = couchDbConnection;
 		this.logger = ninejs.get('logger');
 		this.db = this.storeConnection.database(this.usersDb);
 		this.config = config;
@@ -112,12 +111,10 @@ class AuthCouchDb {
 
 		try {
 			let dbExists = await ncall<boolean>(this.db.exists, this.db);
-			let justCreated = false;
 			if (!dbExists) {
 				await this.db.create();
-				justCreated = true;
 			}
-			await designUsers(this.db, this.logger, this.config, justCreated);
+			await designUsers(this.db, this.logger, this.config);
 			var user = await ncall<any[]>(this.db.view, this.db, documentName + '/active', { key: defaultUserName, reduce: true });
 			if (user.length === 0) {
 				this.logger.info('ninejs/auth/impl (CouchDB): Creating user "' + defaultUserName + '" with password "' + defaultPassword + '".');

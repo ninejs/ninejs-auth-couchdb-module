@@ -19,8 +19,6 @@
     "typings/tsd.d.ts",
 
     "./module.ts",
-    "./cradle.ts",
-    "./couchUtils.ts",
     "./hashMethod.ts",
     "./AuthCouchDb.ts",
     "design/users.ts"
