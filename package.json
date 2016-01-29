@@ -6,7 +6,7 @@
   "repository": "git://github.com/ninejs/ninejs-auth-couchdb-module",
   "dependencies": {
     "cradle": "^0.6.9",
-    "ninejs": "0.2.0"
+    "ninejs": "^0.2.2"
   },
   "devDependencies": {
     "grunt": "^0.4.5",
