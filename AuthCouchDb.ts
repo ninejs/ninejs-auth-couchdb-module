@@ -3,6 +3,7 @@
 import { when, defer, ncall } from 'ninejs/core/deferredUtils'
 import { NineJs, Logger } from 'ninejs/modules/ninejs-server'
 import { default as CouchDB, CouchConnection, Database, ViewParameters } from 'ninejs-store/CouchDB'
+import { create as createDb } from 'ninejs-store/couchdb/couchUtils'
 import hashMethod from './hashMethod'
 import designUsers from './design/users'
 
@@ -112,7 +113,7 @@ class AuthCouchDb {
 		try {
 			let dbExists = await ncall<boolean>(this.db.exists, this.db);
 			if (!dbExists) {
-				await this.db.create();
+				await createDb(this.db);
 			}
 			await designUsers(this.db, this.logger, this.config);
 			var user = await ncall<any[]>(this.db.view, this.db, documentName + '/active', { key: defaultUserName, reduce: true });
