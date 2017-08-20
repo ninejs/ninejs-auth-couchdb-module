@@ -1,47 +1,37 @@
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, Promise, generator) {
-    return new Promise(function (resolve, reject) {
-        generator = generator.call(thisArg, _arguments);
-        function cast(value) { return value instanceof Promise && value.constructor === Promise ? value : new Promise(function (resolve) { resolve(value); }); }
-        function onfulfill(value) { try { step("next", value); } catch (e) { reject(e); } }
-        function onreject(value) { try { step("throw", value); } catch (e) { reject(e); } }
-        function step(verb, value) {
-            var result = generator[verb](value);
-            result.done ? resolve(result.value) : cast(result.value).then(onfulfill, onreject);
-        }
-        step("next", void 0);
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
 (function (factory) {
-    if (typeof module === 'object' && typeof module.exports === 'object') {
-        var v = factory(require, exports); if (v !== undefined) module.exports = v;
+    if (typeof module === "object" && typeof module.exports === "object") {
+        var v = factory(require, exports);
+        if (v !== undefined) module.exports = v;
     }
-    else if (typeof define === 'function' && define.amd) {
-        define(["require", "exports", 'ninejs/core/deferredUtils', 'ninejs-store/couchdb/couchUtils', './hashMethod', './design/users'], factory);
+    else if (typeof define === "function" && define.amd) {
+        define(["require", "exports", "ninejs/core/deferredUtils", "ninejs-store/couchdb/couchUtils", "./hashMethod", "./design/users"], factory);
     }
 })(function (require, exports) {
     'use strict';
-    var deferredUtils_1 = require('ninejs/core/deferredUtils');
-    var couchUtils_1 = require('ninejs-store/couchdb/couchUtils');
-    var hashMethod_1 = require('./hashMethod');
-    var users_1 = require('./design/users');
-    let dot = (name) => {
-        return (obj) => {
-            return obj[name];
-        };
-    };
-    let mapValue = dot('value');
+    Object.defineProperty(exports, "__esModule", { value: true });
+    const deferredUtils_1 = require("ninejs/core/deferredUtils");
+    const couchUtils_1 = require("ninejs-store/couchdb/couchUtils");
+    const hashMethod_1 = require("./hashMethod");
+    const users_1 = require("./design/users");
     class AuthCouchDb {
         constructor(config, ninejs, couchdb) {
             let couchdbConnectionName = (config.options || {}).couchDbConnection;
             let couchDbConnection = couchdb.connection(couchdbConnectionName);
             this.usersDb = ((config.options || {}).usersDb) || this.usersDb;
             this.storeConnection = couchDbConnection;
-            this.logger = ninejs.get('logger');
             this.db = this.storeConnection.database(this.usersDb);
             this.config = config;
         }
         login(username, password, domain) {
-            return __awaiter(this, void 0, Promise, function* () {
+            return __awaiter(this, void 0, void 0, function* () {
                 if (domain) {
                     username += '@' + domain;
                 }
@@ -49,7 +39,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, Promi
                 if ((resp.length === 0) || (resp.length > 1)) {
                     return { result: 'failed' };
                 }
-                var data = resp[0].value;
+                let data = resp[0].value;
                 if (password && data.active && data.username === username && data.password === this.hash(username, password)) {
                     data.result = 'success';
                     this.db.save({
@@ -75,8 +65,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, Promi
             });
         }
         usersByPermission(permissions) {
-            return __awaiter(this, void 0, Promise, function* () {
-                var self = this, args = { reduce: true };
+            return __awaiter(this, void 0, void 0, function* () {
+                let self = this, args = { reduce: true };
                 if (typeof (permissions) !== 'undefined') {
                     args.keys = permissions;
                     args.group = true;
@@ -95,7 +85,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, Promi
             return this.usersByPermission();
         }
         permissions() {
-            return __awaiter(this, void 0, Promise, function* () {
+            return __awaiter(this, void 0, void 0, function* () {
                 try {
                     let permissions = yield deferredUtils_1.ncall(this.db.view, this.db, this.documentName + '/permissions', { reduce: true, group: true });
                     return permissions[0].value;
@@ -107,7 +97,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, Promi
             });
         }
         init() {
-            return __awaiter(this, void 0, Promise, function* () {
+            return __awaiter(this, void 0, void 0, function* () {
                 let options = this.config.options || {}, documentName = options.documentName || 'user', defaultUserName = options.defaultUserName || 'admin', defaultPassword = options.defaultPassword || 'password', defaultPermissions = options.defaultPermissions || ['administrator'], hash = hashMethod_1.default(options.hashMethod, options.hashEncoding);
                 this.documentName = documentName;
                 this.hash = hash;
@@ -116,10 +106,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, Promi
                     if (!dbExists) {
                         yield couchUtils_1.create(this.db);
                     }
-                    yield users_1.default(this.db, this.logger, this.config);
-                    var user = yield deferredUtils_1.ncall(this.db.view, this.db, documentName + '/active', { key: defaultUserName, reduce: true });
+                    yield users_1.default(this.db, this.config);
+                    let user = yield deferredUtils_1.ncall(this.db.view, this.db, documentName + '/active', { key: defaultUserName, reduce: true });
                     if (user.length === 0) {
-                        this.logger.info('ninejs/auth/impl (CouchDB): Creating user "' + defaultUserName + '" with password "' + defaultPassword + '".');
+                        console.log('ninejs/auth/impl (CouchDB): Creating user "' + defaultUserName + '" with password "' + defaultPassword + '".');
                         yield deferredUtils_1.ncall(this.db.save, this.db, {
                             type: 'user',
                             username: defaultUserName,
@@ -128,7 +118,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, Promi
                             created: (new Date()).getTime(),
                             permissions: defaultPermissions
                         });
-                        this.logger.info('ninejs/auth/impl (CouchDB): user "' + defaultUserName + '" created successfully.');
+                        console.log('ninejs/auth/impl (CouchDB): user "' + defaultUserName + '" created successfully.');
                     }
                     return true;
                 }
@@ -139,9 +129,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, Promi
             });
         }
         getUser(username) {
-            return __awaiter(this, void 0, Promise, function* () {
+            return __awaiter(this, void 0, void 0, function* () {
                 try {
-                    var data = yield deferredUtils_1.ncall(this.db.view, this.db, this.documentName + '/active', { key: username, reduce: true });
+                    let data = yield deferredUtils_1.ncall(this.db.view, this.db, this.documentName + '/active', { key: username, reduce: true });
                     return data[0].value;
                 }
                 catch (err) {

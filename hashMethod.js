@@ -1,15 +1,17 @@
 (function (factory) {
-    if (typeof module === 'object' && typeof module.exports === 'object') {
-        var v = factory(require, exports); if (v !== undefined) module.exports = v;
+    if (typeof module === "object" && typeof module.exports === "object") {
+        var v = factory(require, exports);
+        if (v !== undefined) module.exports = v;
     }
-    else if (typeof define === 'function' && define.amd) {
-        define(["require", "exports", 'crypto'], factory);
+    else if (typeof define === "function" && define.amd) {
+        define(["require", "exports", "crypto"], factory);
     }
 })(function (require, exports) {
     'use strict';
-    var crypto = require('crypto');
+    Object.defineProperty(exports, "__esModule", { value: true });
+    const crypto = require("crypto");
     function createHash(type, v) {
-        var hash = crypto.createHash(type);
+        let hash = crypto.createHash(type);
         hash.update(v);
         return hash;
     }

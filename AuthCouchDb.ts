@@ -1,25 +1,16 @@
 'use strict';
 
-import { when, defer, ncall } from 'ninejs/core/deferredUtils'
-import { NineJs, Logger } from 'ninejs/modules/ninejs-server'
+import { ncall } from 'ninejs/core/deferredUtils'
+import { NineJs } from 'ninejs/modules/ninejs-server'
 import { default as CouchDB, CouchConnection, Database, ViewParameters } from 'ninejs-store/CouchDB'
 import { create as createDb } from 'ninejs-store/couchdb/couchUtils'
 import hashMethod from './hashMethod'
 import designUsers from './design/users'
 
 
-
-let dot = (name: string) => {
-	return (obj: any) => {
-		return obj[name];
-	};
-};
-let mapValue = dot('value');
-
 class AuthCouchDb {
 	usersDb: string;
 	storeConnection: CouchConnection;
-	logger: Logger;
 	db: Database;
 	hash: (username: string, password: string) => string;
 	documentName: string;
@@ -29,7 +20,6 @@ class AuthCouchDb {
 		let couchDbConnection = couchdb.connection(couchdbConnectionName);
 		this.usersDb = ((config.options || {}).usersDb) || this.usersDb;
 		this.storeConnection = couchDbConnection;
-		this.logger = ninejs.get('logger');
 		this.db = this.storeConnection.database(this.usersDb);
 		this.config = config;
 	}
@@ -46,7 +36,7 @@ class AuthCouchDb {
 		if ((resp.length === 0) || (resp.length > 1)) {
 			return {result: 'failed'};
 		}
-		var data = resp[0].value;
+		let data = resp[0].value;
 		if (password && data.active && data.username === username && data.password === this.hash(username, password)) {
 			data.result = 'success';
 			this.db.save({
@@ -71,7 +61,7 @@ class AuthCouchDb {
 		}
 	}
 	async usersByPermission (permissions?: string[]): Promise<any> {
-		var self = this,
+		let self = this,
 			args: ViewParameters = { reduce: true };
 		if (typeof(permissions) !== 'undefined') {
 			args.keys = permissions;
@@ -115,10 +105,10 @@ class AuthCouchDb {
 			if (!dbExists) {
 				await createDb(this.db);
 			}
-			await designUsers(this.db, this.logger, this.config);
-			var user = await ncall<any[]>(this.db.view, this.db, documentName + '/active', { key: defaultUserName, reduce: true });
+			await designUsers(this.db, this.config);
+			let user = await ncall<any[]>(this.db.view, this.db, documentName + '/active', { key: defaultUserName, reduce: true });
 			if (user.length === 0) {
-				this.logger.info('ninejs/auth/impl (CouchDB): Creating user "' + defaultUserName + '" with password "' + defaultPassword + '".');
+				console.log('ninejs/auth/impl (CouchDB): Creating user "' + defaultUserName + '" with password "' + defaultPassword + '".');
 				await ncall(this.db.save, this.db, {
 					type: 'user',
 					username: defaultUserName,
@@ -127,7 +117,7 @@ class AuthCouchDb {
 					created: (new Date()).getTime(),
 					permissions: defaultPermissions
 				});
-				this.logger.info('ninejs/auth/impl (CouchDB): user "' + defaultUserName + '" created successfully.');
+				console.log('ninejs/auth/impl (CouchDB): user "' + defaultUserName + '" created successfully.');
 			}
 			return true;
 		}
@@ -138,7 +128,7 @@ class AuthCouchDb {
 	}
 	async getUser (username: string) {
 		try {
-			var data = await ncall<any[]>(this.db.view, this.db, this.documentName + '/active', { key: username, reduce: true });
+			let data = await ncall<any[]>(this.db.view, this.db, this.documentName + '/active', { key: username, reduce: true });
 			return data[0].value;
 		} catch (err) {
 			console.error(err);

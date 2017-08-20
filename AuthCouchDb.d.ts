@@ -1,9 +1,8 @@
-import { NineJs, Logger } from 'ninejs/modules/ninejs-server';
+import { NineJs } from 'ninejs/modules/ninejs-server';
 import { default as CouchDB, CouchConnection, Database } from 'ninejs-store/CouchDB';
 declare class AuthCouchDb {
     usersDb: string;
     storeConnection: CouchConnection;
-    logger: Logger;
     db: Database;
     hash: (username: string, password: string) => string;
     documentName: string;

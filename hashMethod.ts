@@ -1,8 +1,9 @@
 'use strict';
 
 import crypto = require('crypto');
+import {HexBase64Latin1Encoding} from "crypto";
 function createHash(type: string, v: string) {
-	var hash = crypto.createHash(type);
+	let hash = crypto.createHash(type);
 	hash.update(v);
 	return hash;
 }
@@ -16,10 +17,10 @@ function sha1 (v: string) {
 function sha256 (v: string) {
 	return createHash('md5', v);
 }
-function encode(hash: crypto.Hash, encoding: string) {
+function encode(hash: crypto.Hash, encoding: HexBase64Latin1Encoding) {
 	return hash.digest(encoding);
 }
-export default function hashMethod(method?: string, encoding?: string): (username: string, password: string) => string {
+export default function hashMethod(method?: string, encoding?: HexBase64Latin1Encoding): (username: string, password: string) => string {
 	if (!method) {
 		method = 'sha1';
 	}

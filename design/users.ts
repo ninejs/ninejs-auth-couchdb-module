@@ -1,14 +1,12 @@
 'use strict';
-import {Logger} from 'ninejs/modules/ninejs-server';
 import {Database} from 'ninejs-store/CouchDB';
-import { defer, PromiseType } from 'ninejs/core/deferredUtils'
+import { defer } from 'ninejs/core/deferredUtils'
 import { mergeWithoutConflict, merge } from 'ninejs-store/couchdb/couchUtils'
-import hashMethod from '../hashMethod'
 
 let	emit: any; //just to pass linter
 
 function getUserDesignDocument (config: any) {
-	var documentName = config.documentName || 'user';
+	let documentName = config.documentName || 'user';
 	return {
 		'_id': '_design/' + documentName,
 		'language': 'javascript',
@@ -172,7 +170,7 @@ function getUserDesignDocument (config: any) {
 function differ(existing: any, data: any) {
 	if ((existing._id === data._id) && (existing.language === data.language)) {
 		return Object.keys(data.views).some(function(viewKey) {
-			var existingView = existing.views[viewKey],
+			let existingView = existing.views[viewKey],
 				dataView = data.views[viewKey];
 			if (!existingView) {
 				return true;
@@ -186,19 +184,19 @@ function differ(existing: any, data: any) {
 	}
 }
 
-export default function checkDb(db: Database, log: Logger, config: any) {
-	var userDefer = defer(),
-		config = config || {},
-		options = config.options || {},
+export default function checkDb(db: Database, config: any) {
+	let userDefer = defer(),
+		_config = config || {},
+		options = _config.options || {},
 		documentName = options.documentName || 'user';
-	let user = getUserDesignDocument (config);
+	let user = getUserDesignDocument (_config);
 
 	db.get('_design/' + documentName, function(err: any, data: any) {
 		if (err) {
-			log.info('Attempting to reconstruct _design/' + documentName);
+			console.log('Attempting to reconstruct _design/' + documentName);
 			mergeWithoutConflict(db, '_design/' + documentName, user, function(err: any) {
 				if (err) {
-					log.error(err);
+					console.error(err);
 					userDefer.reject(err);
 				} else {
 					userDefer.resolve(true);
@@ -206,11 +204,11 @@ export default function checkDb(db: Database, log: Logger, config: any) {
 			});
 		} else {
 			if (differ(data, user)) {
-				log.info('Updating _design/' + documentName);
+				console.log('Updating _design/' + documentName);
 				mergeWithoutConflict(db, '_design/' + documentName, merge({}, data, user), function(err: any) {
 					if (err) {
 						userDefer.reject(err);
-						log.info(err);
+						console.error(err);
 					} else {
 						userDefer.resolve(true);
 					}
