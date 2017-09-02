@@ -10,20 +10,11 @@ function exports(grunt) {
 	require('load-grunt-tasks')(grunt);
 	// Project configuration.
 	grunt.initConfig({
-		ts: {
-			default : {
-				tsconfig: './tsconfig.json',
-				options: {
-					"compiler": "./node_modules/typescript/bin/tsc"
-				}
-			}
-		},
-		tsd: {
-
+		exec: {
+			defaultTs : (process.env.TS_COMPILER || "./node_modules/typescript/bin/tsc") + " -p ./tsconfig.json"
 		}
 	});
 
-	grunt.loadNpmTasks('grunt-globaltsd');
 	grunt.registerTask('tsd','Install TypeScript definitions', function() {
 		var done = this.async(),
 			command = 'node',
@@ -41,7 +32,7 @@ function exports(grunt) {
 		});
 	});
 	// Default task.
-	grunt.registerTask('default', ['tsd', 'ts']);
+	grunt.registerTask('default', ['exec']);
 
 }
 

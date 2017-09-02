@@ -4,12 +4,11 @@
         if (v !== undefined) module.exports = v;
     }
     else if (typeof define === "function" && define.amd) {
-        define(["require", "exports", "ninejs/core/deferredUtils", "ninejs-store/couchdb/couchUtils"], factory);
+        define(["require", "exports", "ninejs-store/couchdb/couchUtils"], factory);
     }
 })(function (require, exports) {
     'use strict';
     Object.defineProperty(exports, "__esModule", { value: true });
-    const deferredUtils_1 = require("ninejs/core/deferredUtils");
     const couchUtils_1 = require("ninejs-store/couchdb/couchUtils");
     let emit;
     function getUserDesignDocument(config) {
@@ -176,40 +175,41 @@
         }
     }
     function checkDb(db, config) {
-        let userDefer = deferredUtils_1.defer(), _config = config || {}, options = _config.options || {}, documentName = options.documentName || 'user';
-        let user = getUserDesignDocument(_config);
-        db.get('_design/' + documentName, function (err, data) {
-            if (err) {
-                console.log('Attempting to reconstruct _design/' + documentName);
-                couchUtils_1.mergeWithoutConflict(db, '_design/' + documentName, user, function (err) {
-                    if (err) {
-                        console.error(err);
-                        userDefer.reject(err);
-                    }
-                    else {
-                        userDefer.resolve(true);
-                    }
-                });
-            }
-            else {
-                if (differ(data, user)) {
-                    console.log('Updating _design/' + documentName);
-                    couchUtils_1.mergeWithoutConflict(db, '_design/' + documentName, couchUtils_1.merge({}, data, user), function (err) {
+        return new Promise((resolve, reject) => {
+            let _config = config || {}, options = _config.options || {}, documentName = options.documentName || 'user';
+            let user = getUserDesignDocument(_config);
+            db.get('_design/' + documentName, function (err, data) {
+                if (err) {
+                    console.log('Attempting to reconstruct _design/' + documentName);
+                    couchUtils_1.mergeWithoutConflict(db, '_design/' + documentName, user, function (err) {
                         if (err) {
-                            userDefer.reject(err);
                             console.error(err);
+                            reject(err);
                         }
                         else {
-                            userDefer.resolve(true);
+                            resolve(true);
                         }
                     });
                 }
                 else {
-                    userDefer.resolve(true);
+                    if (differ(data, user)) {
+                        console.log('Updating _design/' + documentName);
+                        couchUtils_1.mergeWithoutConflict(db, '_design/' + documentName, couchUtils_1.merge({}, data, user), function (err) {
+                            if (err) {
+                                reject(err);
+                                console.error(err);
+                            }
+                            else {
+                                resolve(true);
+                            }
+                        });
+                    }
+                    else {
+                        resolve(true);
+                    }
                 }
-            }
+            });
         });
-        return userDefer.promise;
     }
     exports.default = checkDb;
 });

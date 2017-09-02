@@ -1,6 +1,5 @@
 'use strict';
 import {Database} from 'ninejs-store/CouchDB';
-import { defer } from 'ninejs/core/deferredUtils'
 import { mergeWithoutConflict, merge } from 'ninejs-store/couchdb/couchUtils'
 
 let	emit: any; //just to pass linter
@@ -185,39 +184,38 @@ function differ(existing: any, data: any) {
 }
 
 export default function checkDb(db: Database, config: any) {
-	let userDefer = defer(),
-		_config = config || {},
-		options = _config.options || {},
-		documentName = options.documentName || 'user';
-	let user = getUserDesignDocument (_config);
+	return new Promise((resolve, reject) => {
+        let _config = config || {},
+            options = _config.options || {},
+            documentName = options.documentName || 'user';
+        let user = getUserDesignDocument (_config);
 
-	db.get('_design/' + documentName, function(err: any, data: any) {
-		if (err) {
-			console.log('Attempting to reconstruct _design/' + documentName);
-			mergeWithoutConflict(db, '_design/' + documentName, user, function(err: any) {
-				if (err) {
-					console.error(err);
-					userDefer.reject(err);
-				} else {
-					userDefer.resolve(true);
-				}
-			});
-		} else {
-			if (differ(data, user)) {
-				console.log('Updating _design/' + documentName);
-				mergeWithoutConflict(db, '_design/' + documentName, merge({}, data, user), function(err: any) {
-					if (err) {
-						userDefer.reject(err);
-						console.error(err);
-					} else {
-						userDefer.resolve(true);
-					}
-				});
-			} else {
-				userDefer.resolve(true);
-			}
-		}
+        db.get('_design/' + documentName, function(err: any, data: any) {
+            if (err) {
+                console.log('Attempting to reconstruct _design/' + documentName);
+                mergeWithoutConflict(db, '_design/' + documentName, user, function(err: any) {
+                    if (err) {
+                        console.error(err);
+                        reject(err);
+                    } else {
+                        resolve(true);
+                    }
+                });
+            } else {
+                if (differ(data, user)) {
+                    console.log('Updating _design/' + documentName);
+                    mergeWithoutConflict(db, '_design/' + documentName, merge({}, data, user), function(err: any) {
+                        if (err) {
+                            reject(err);
+                            console.error(err);
+                        } else {
+                            resolve(true);
+                        }
+                    });
+                } else {
+                    resolve(true);
+                }
+            }
+        });
 	});
-
-	return userDefer.promise;
 }

@@ -32,11 +32,17 @@ class AuthCouchDb {
 		if (domain) {
 			username += '@' + domain;
 		}
-		let resp = await ncall<any>(this.db.view, this.db, this.documentName + '/active', { key: username, reduce: true });
+		let resp = await ncall<any>(this.db.view, this.db, this.documentName + '/active', { key: username, reduce: true, group: true });
 		if ((resp.length === 0) || (resp.length > 1)) {
 			return {result: 'failed'};
 		}
-		let data = resp[0].value;
+		let data: any;
+		if (Array.isArray(resp[0].value)) {
+            data = resp[0].value[0];
+		}
+		else {
+            data = resp[0].value;
+		}
 		if (password && data.active && data.username === username && data.password === this.hash(username, password)) {
 			data.result = 'success';
 			this.db.save({
